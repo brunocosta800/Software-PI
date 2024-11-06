@@ -2,55 +2,80 @@ import streamlit as st
 import pyrebase
 
 config = {
-  "apiKey": "AIzaSyD4e11Z68I8wpAif9LOZQag0UcACEetBuw",
-  "authDomain": "projectId.firebaseapp.com",
-  "databaseURL": "https://console.firebase.google.com/project/software-pi/overview?hl=pt-br",
-  "storageBucket": "https://console.firebase.google.com/project/software-pi/storage?hl=pt-br",
-  "serviceAccount": "software-pi-ee3c8ccdcd27.json"
+    "apiKey": "AIzaSyD4e11Z68I8wpAif9LOZQag0UcACEetBuw",
+    "authDomain": "projectId.firebaseapp.com",
+    "databaseURL": "https://console.firebase.google.com/project/software-pi/overview?hl=pt-br",
+    "storageBucket": "https://console.firebase.google.com/project/software-pi/storage?hl=pt-br",
+    "serviceAccount": "software-pi-ee3c8ccdcd27.json"
 }
 
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 
 def app():
-    st.title("Login / Cadastro")
+    st.markdown('<h1 style="text-align: center; margin-bottom: 50px;">Login / Cadastro</h1>', unsafe_allow_html=True)
 
     if 'show_register' not in st.session_state:
         st.session_state.show_register = False
+        
+    if 'useremail' not in st.session_state:
+        st.session_state.useremail = ''
+    
+    if 'signedout' not in st.session_state:
+        st.session_state.signedout = False
+    if 'signout' not in st.session_state:
+        st.session_state.signout = False
 
-    if st.button("Registrar"):
-        st.session_state.show_register = True
-    if st.button("Voltar para Login"):
-        st.session_state.show_register = False
+    if not st.session_state['signedout']:
+        if st.session_state.show_register:
+            st.subheader("Cadastro")
+            email = st.text_input("E-mail")
+            password = st.text_input("Senha", type='password')
+            confirm_password = st.text_input("Confirmar Senha", type='password')
 
-    if st.session_state.show_register:
-        st.subheader("Cadastro")
-        email = st.text_input("E-mail")
-        username = st.text_input("Usuário")
-        password = st.text_input("Senha", type='password')
-        confirm_password = st.text_input("Confirmar Senha", type='password')
+            if password != confirm_password:
+                st.error("As senhas não coincidem! Digite novamente!")
+            elif st.button("Cadastrar"):
+                try:
+                    user = auth.create_user_with_email_and_password(email=email, password=password)
+                    st.success('Conta criada com sucesso! Você pode agora fazer login.')
+                    auth.send_email_verification(user['idToken'])
+                    st.session_state.show_register = False
+                    st.rerun()
+                except Exception as e:
+                    st.warning(f'Erro ao criar conta: {e}')
+        else:
+            st.subheader("Login")
+            email = st.text_input("E-mail")
+            password = st.text_input("Senha", type='password')
+            
+            if st.button("Entrar"):
+                try:
+                    user = auth.sign_in_with_email_and_password(email, password)
+                    user = auth.refresh(user['refreshToken'])
+                    st.session_state.signedout = True 
+                    st.session_state.signout = True 
+                    st.session_state.useremail = email
+                    st.rerun()
+                except Exception as e:
+                    st.warning('Falha ao logar! Verifique suas credenciais.')
+        
+        if st.session_state.show_register:
+            st.button("Já tem uma conta? Faça login!", on_click=toggle_register)
+        else:
+            st.button("Não tem uma conta? Registre-se!", on_click=toggle_register)
 
-        if password != confirm_password:
-            st.error("As senhas não coincidem! Digite novamente!")
-        elif username == "":
-            st.error("O usuário não pode estar vazio!")
-        elif st.button("Cadastrar"):
-            user = auth.create_user_with_email_and_password(email=email, password=password)
-            st.success('Conta criada com sucesso! Por favor, logue usando seu e-mail e senha.')
+    if st.session_state.signout:
+        st.text('E-mail: ' + st.session_state.useremail)
+        st.button('Sign out', on_click=t)
 
-    else:
-        st.subheader("Login")
-        email = st.text_input("E-mail")
-        password = st.text_input("Senha", type='password')
+def toggle_register():
+    st.session_state.show_register = not st.session_state.show_register
 
-        if st.button("Entrar"):
-            try:
-                user = auth.sign_in_with_email_and_password(email, password)
-                user = auth.refresh(user['refreshToken'])
-                st.success(user['idToken'])
-                auth.send_email_verification(user['idToken'])
-            except Exception as e:
-                st.warning('Falha ao logar!')
+def t():
+    st.session_state.signout = False
+    st.session_state.signedout = False
+    st.session_state.useremail = ''
 
 if __name__ == "__main__":
     app()
