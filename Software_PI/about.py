@@ -1,5 +1,8 @@
 import streamlit as st
 
 def app():
-    st.markdown('<h1 style="text-align: center;">O que é o <span style="color: #408CFF;">SmartTravel Insights</span>?</h1>', unsafe_allow_html=True)
-    st.text('')
+    st.markdown('<h1 style="text-align: center; margin-bottom: 50px;">O que é o <span style="color: #408CFF;">SmartTravel Insights</span>?</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 20px; margin-bottom: 35px;">Nosso projeto de data science foi desenvolvido com o objetivo de fornecer insights estratégicos sobre o impacto dos feriados nacionais no turismo brasileiro, oferecendo soluções baseadas em dados para otimizar o desempenho de agências de turismo, hotéis e empresas do setor. Através da análise detalhada de informações históricas e tendências de mercado, buscamos identificar padrões de comportamento dos viajantes, otimizar a logística de destinos turísticos e aumentar a rentabilidade das empresas. </p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 20px; margin-bottom: 35px;">Nossa plataforma apresenta dados valiosos sobre o fluxo de viagens durante os principais feriados do ano, o impacto financeiro nas reservas de hospedagem e passagens aéreas, e como os feriados que caem nos finais de semana podem afetar a demanda. Além disso, analisamos o tráfego aéreo nos principais aeroportos, oferecendo recomendações para melhor distribuição de voos e redução de atrasos.</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 20px; margin-bottom: 35px;">Ao fornecer essas informações estratégicas, nossa missão é transformar o setor turístico brasileiro, tornando-o mais eficiente, rentável e capaz de oferecer uma experiência ainda mais agradável para os viajantes. Com base em dados, buscamos contribuir para um turismo mais inteligente, que beneficie tanto as empresas quanto os turistas, e, ao mesmo tempo, impulsione a economia nacional.</p>', unsafe_allow_html=True)
+    
