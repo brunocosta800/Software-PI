@@ -1,7 +1,9 @@
+#region imports
 import streamlit as st
 import pyrebase
+#endregion
 
-# Configuração do Firebase
+#region configDB
 config = {
     "apiKey": "AIzaSyD4e11Z68I8wpAif9LOZQag0UcACEetBuw",
     "authDomain": "projectId.firebaseapp.com",
@@ -12,9 +14,12 @@ config = {
 
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
+#endregion
 
+#region app
 def app():
-    # Inicializa o estado da sessão
+    st.markdown('<h1 style="text-align: center; margin-bottom: 50px;">Conta</h1>', unsafe_allow_html=True)
+    
     if 'signedout' not in st.session_state:
         st.session_state.signedout = False
     if 'useremail' not in st.session_state:
@@ -24,22 +29,16 @@ def app():
     if 'idToken' not in st.session_state:
         st.session_state.idToken = None
 
-    # Se o usuário estiver autenticado, exibe o conteúdo privado
     if st.session_state.signedout:
         st.write(f"Bem-vindo, {st.session_state.useremail}!")
         
-        # Botão para deslogar
         st.button("Sair", on_click=sign_out)
-        
-        # Botão para excluir a conta do usuário
-        st.warning("Ao excluir sua conta, todos os dados associados a ela serão removidos permanentemente!")
-        if st.button("Excluir Conta"):
-            delete_account()
 
     else:
-        # Caso contrário, exibe a tela de login
         login_register_screen()
+#endregion
 
+#region configLoginAoSair
 def login_register_screen():
     st.markdown('<h1 style="text-align: center; margin-bottom: 50px;">Login / Cadastro</h1>', unsafe_allow_html=True)
 
@@ -90,20 +89,7 @@ def sign_out():
     st.session_state.useremail = ''
     st.session_state.idToken = None
     st.rerun()
-
-def delete_account():
-    try:
-        if st.session_state.idToken is None:
-            st.error("Você precisa estar logado para excluir sua conta.")
-            return
-        
-        auth.delete_user(st.session_state.idToken)
-        
-        st.success("Sua conta foi excluída com sucesso!")
-        sign_out()
-
-    except Exception as e:
-        st.error(f"Erro ao excluir a conta: {e}")
+#endregion
 
 if __name__ == "__main__":
     app()

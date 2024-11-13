@@ -1,11 +1,14 @@
+#region imports
 import streamlit as st
+import subprocess
 from streamlit_option_menu import option_menu
 import home
-import dashboard
 import account
 import about
 import pyrebase
+#endregion
 
+#region configDB
 config = {
     "apiKey": "AIzaSyD4e11Z68I8wpAif9LOZQag0UcACEetBuw",
     "authDomain": "projectId.firebaseapp.com",
@@ -16,7 +19,9 @@ config = {
 
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
+#endregion 
 
+#region configPageMain
 st.set_page_config(
     page_title="SmartTravel Insights"
 )
@@ -75,12 +80,26 @@ class MultiApp:
         if app == 'Home':
             home.app()
         if app == 'Dashboard':
-            dashboard.app()
+            self.run_dashboard()
         if app == 'Conta':
             account.app()
         if app == 'Sobre o Projeto':
             about.app()
 
+    def run_dashboard(self):
+        """ Inicia o servidor Dash em um subprocesso """
+        subprocess.Popen(["python", "dashboard.py"])
+
+        st.markdown(
+            """
+            <h1 style="text-align: center;">Dashboard</h1>
+            <iframe src="http://localhost:8051" width="100%" height="600px"></iframe>
+            """, 
+            unsafe_allow_html=True
+        )
+#endregion 
+
+#region configLoginAoIniciar
 def login_screen():
     st.markdown('<h1 style="text-align: center; margin-bottom: 50px;">Login / Cadastro</h1>', unsafe_allow_html=True)
 
@@ -126,6 +145,8 @@ def login_screen():
 
 def toggle_register():
     st.session_state.show_register = not st.session_state.show_register
+    
+#endregion 
 
 if __name__ == "__main__":
     app = MultiApp()
