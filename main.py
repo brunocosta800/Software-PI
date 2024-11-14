@@ -132,9 +132,19 @@ def login_screen():
             try:
                 user = auth.sign_in_with_email_and_password(email, password)
                 user = auth.refresh(user['refreshToken'])
-                st.session_state.signedout = True
-                st.session_state.useremail = email
-                st.rerun()
+                account_info = auth.get_account_info(user['idToken'])
+                print(account_info['users'][0])
+
+                if account_info['users'][0]['emailVerified']:
+                    st.session_state.signedout = True
+                    st.session_state.useremail = email
+                    st.session_state.idToken = user['idToken']
+                    st.rerun()
+
+                else:
+                    st.warning('Verifique seu e-mail antes de fazer login.')
+                    auth.send_email_verification(user['idToken'])
+                    
             except Exception as e:
                 st.warning('Falha ao logar! Verifique suas credenciais.')
 
