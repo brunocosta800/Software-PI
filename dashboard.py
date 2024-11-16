@@ -1,81 +1,132 @@
 import dash
-from dash import dcc, html
+from dash import dcc, html, Input, Output
 import requests
 import pandas as pd
+import streamlit as st
+import plotly.express as px
 
-urlDestinosNormal = "http://192.168.15.43:5000/destinosNormais"
-response = requests.get(urlDestinosNormal)
-dadosDestinosNormal = response.json()
+app = dash.Dash(__name__)
+
+st.session_state.urlDestinosNormal = f"http://192.168.15.43:5000/destinosNormais?ano={'Todos'}"
+responseDestinosNormal = requests.get(st.session_state.urlDestinosNormal)
+dadosDestinosNormal = responseDestinosNormal.json()
 Top5CidadesNormal = pd.DataFrame(dadosDestinosNormal)
 
-urlDestinosFeriado = "http://192.168.15.43:5000/destinosFeriado"
-response = requests.get(urlDestinosFeriado)
-dadosDestinosFeriado = response.json()
+urlDestinosFeriado = f"http://192.168.15.43:5000/destinosFeriado?ano={'Todos'}"
+responseDestinosFeriado = requests.get(urlDestinosFeriado)
+dadosDestinosFeriado = responseDestinosFeriado.json()
 Top5CidadesFeriado = pd.DataFrame(dadosDestinosFeriado)
 
-urlVoosPorFeriado = "http://192.168.15.43:5000/voosPorFeriado"
+urlVoosPorFeriado = f"http://192.168.15.43:5000/voosPorFeriado?ano={'Todos'}"
 responseVoosPorFeriado = requests.get(urlVoosPorFeriado)
 dadosVoosPorFeriado = responseVoosPorFeriado.json()
 voosPorFeriado = pd.DataFrame(dadosVoosPorFeriado)
 
-app = dash.Dash(__name__)
+urlVoosPorAno = f"http://192.168.15.43:5000/voosPorAno"
+responseVoosPorAno = requests.get(urlVoosPorAno)
+dadosVoosPorAno = responseVoosPorAno.json()
+voosPorAno = pd.DataFrame(dadosVoosPorAno)
 
+urlFeriadosPorAno = f"http://192.168.15.43:5000/feriadosProlongadosPorAno"
+responseFeriadosPorAno = requests.get(urlFeriadosPorAno)
+dadosFeriadosPorAno = responseFeriadosPorAno.json()
+feriadosPorAno = pd.DataFrame(dadosFeriadosPorAno)
+
+st.session_state.urlVoosPorMes = f"http://192.168.15.43:5000/voosPorMes?ano={'Todos'}"
+responseVoosPorMes = requests.get(st.session_state.urlVoosPorMes)
+dadosVoosPorMes = responseVoosPorMes.json()
+voosPorMes = pd.DataFrame(dadosVoosPorMes)
+
+ano = ["Todos", "2014","2015","2016","2017","2018", "2019","2020","2021","2022","2023"]
+estados = 'http://192.168.15.43:5000/nomesEstados'
+responseEstado = requests.get(estados)
+estado = ['Todos'] + responseEstado.json()
+#region graficos
+
+#region dropdowns
 app.layout = html.Div([
-    html.Div([
-        html.H2("Top 5 Cidades Mais Visitadas em Dias Normais", style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
-        dcc.Graph(id='graph-destinos-normais', figure={
-            'data': [{
-                'x': Top5CidadesNormal['cidade'],
-                'y': Top5CidadesNormal['contagem'],
-                'type': 'bar',
-                'name': 'Destinos Normais'
-            }],
-            'layout': {
-                'bargap': 0.5,
-                'plot_bgcolor': 'rgba(0,0,0,0)',
-                'paper_bgcolor': 'rgba(0,0,0,0)',
-                'xaxis': {
-                    'title': 'Cidades',
-                    'showgrid': False,  
-                    'tickangle': 0,  
-                    'tickmode': 'array',  
-                    'tickvals': Top5CidadesNormal['cidade'],  
-                    'tickfont': {'size': 10, 'family': 'Arial'},  
-                },
-                'title': 'Destinos Mais Visitados em Dias Normais',
-                'title_x': 0.5,
-            }
-        })
-    ], style={'padding': '20px'}),  
+    dcc.Dropdown(
+            id='ano-dropdown',
+            options=[{'label': ano, 'value': ano} for ano in ano],
+            value='Todos' 
+    ),
+    dcc.Dropdown(
+            id='modal-dropdown',
+            options=[{'label': estado, 'value': estado} for estado in estado],
+            value='Todos' 
+    ),
+    dcc.Dropdown(
+            id='destino-dropdown',
+            options=[{'label': 'regiao', 'value': 'regiao'}],
+            value='Todos' 
+    ),
+#endregion
 
+#region graficoTop5Normais
     html.Div([
-        html.H2("Top 5 Cidades Mais Visitadas em Feriados", style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkred'}),
-        dcc.Graph(id='graph-destinos-feriado', figure={
-            'data': [{
-                'x': Top5CidadesFeriado['cidade'],
-                'y': Top5CidadesFeriado['contagem'],
-                'type': 'bar',
-                'name': 'Destinos Feriado'
-            }],
-            'layout': {
-                'bargap': 0.5,
-                'plot_bgcolor': 'rgba(0,0,0,0)',
-                'paper_bgcolor': 'rgba(0,0,0,0)',
-                'xaxis': {
-                    'title': 'Cidades',
-                    'showgrid': False,  
-                    'tickangle': 0, 
-                    'tickmode': 'array', 
-                    'tickvals': Top5CidadesFeriado['cidade'],
-                    'tickfont': {'size': 10, 'family': 'Arial'},  
-                },
-                'title': 'Destinos Mais Visitados em Feriados',
-            }
-        })
-    ], style={'padding': '20px'}),
-    
+        html.Div([
+            html.H2("Top 5 Cidades Mais Visitadas em Dias Normais", 
+                    style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
+            dcc.Graph(id='graph-destinos-normais', figure={
+                'data': [{
+                    'x': Top5CidadesNormal['cidade'],
+                    'y': Top5CidadesNormal['contagem'],
+                    'type': 'bar',
+                    'name': 'Destinos Normais'
+                }],
+                'layout': {
+                    'bargap': 0.5,
+                    'plot_bgcolor': 'rgba(0,0,0,0)',
+                    'paper_bgcolor': 'rgba(0,0,0,0)',
+                    'xaxis': {
+                        'title': 'Cidades',
+                        'showgrid': False,
+                        'tickangle': 0,
+                        'tickmode': 'array',
+                        'tickvals': Top5CidadesNormal['cidade'],
+                        'tickfont': {'size': 10, 'family': 'Arial'},
+                    },
+                    'title': 'Destinos Mais Visitados em Dias Normais',
+                    'title_x': 0.5,
+                }
+            })
+        ], style={'padding': '20px', 'flex': 1, 'max-width': '50%'}),  
+#endregion
+
+#region graficoTop5Feriados
+        html.Div([
+            html.H2("Top 5 Cidades Mais Visitadas em Feriados", 
+                    style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
+            dcc.Graph(id='graph-destinos-feriado', figure={
+                'data': [{
+                    'x': Top5CidadesFeriado['cidade'],
+                    'y': Top5CidadesFeriado['contagem'],
+                    'type': 'bar',
+                    'name': 'Destinos Feriado'
+                }],
+                'layout': {
+                    'bargap': 0.5,
+                    'plot_bgcolor': 'rgba(0,0,0,0)',
+                    'paper_bgcolor': 'rgba(0,0,0,0)',
+                    'xaxis': {
+                        'title': 'Cidades',
+                        'showgrid': False,
+                        'tickangle': 0,
+                        'tickmode': 'array',
+                        'tickvals': Top5CidadesFeriado['cidade'],
+                        'tickfont': {'size': 10, 'family': 'Arial'},
+                    },
+                    'title': 'Destinos Mais Visitados em Feriados',
+                }
+            })
+        ], style={'padding': '20px', 'flex': 1, 'max-width': '50%'}),
+    ], style={'display': 'flex', 'justify-content': 'space-between'}),
+#endregion
+
+#region graficoVoosPorFeriado
     html.Div([
-        html.H2("Quantidade de Vôos Por Feriado", style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
+        html.H2("Quantidade de Vôos Por Feriado", 
+                style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
         dcc.Graph(id='graph-voos-por-feriado', figure={
             'data': [{
                 'x': voosPorFeriado['nome feriado'],
@@ -88,19 +139,188 @@ app.layout = html.Div([
                 'plot_bgcolor': 'rgba(0,0,0,0)',
                 'paper_bgcolor': 'rgba(0,0,0,0)',
                 'xaxis': {
-                    'title': 'Cidades',
-                    'showgrid': False,  
-                    'tickangle': 0,  
-                    'tickmode': 'array',  
-                    'tickvals': voosPorFeriado['nome feriado'],  
-                    'tickfont': {'size': 10, 'family': 'Arial'},  
+                    'title': 'Feriados',
+                    'showgrid': False,
+                    'tickangle': 0,
+                    'tickmode': 'array',
+                    'tickvals': voosPorFeriado['nome feriado'],
+                    'tickfont': {'size': 10, 'family': 'Arial'},
                 },
-                'title': 'Número de Vôos por feriado',
+                'title': 'Número de Vôos por Feriado',
                 'title_x': 0.5,
             }
         })
-    ], style={'padding': '20px'})  
+    ], style={'padding': '20px'}),
+#endregion
+
+#region graficoVoosPorAno
+    html.Div([
+    html.Div([
+        html.H2("Quantidade de Vôos Por Ano", 
+                style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
+        dcc.Graph(id='graph-voos-por-ano', figure={
+            'data': [{
+                'x': voosPorAno['ano'],
+                'y': voosPorAno['contagem'],
+                'type': 'scatter',
+                'mode': 'lines+markers',
+                'name': 'Vôos por Ano',
+            }],
+            'layout': {
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'xaxis': {
+                    'title': 'Ano',
+                    'showgrid': False,
+                    'tickangle': 0,
+                    'tickmode': 'array',
+                    'tickvals': voosPorAno['ano'],
+                    'tickfont': {'size': 10, 'family': 'Arial'},
+                },
+                'yaxis': {
+                    'title': 'Número de Vôos',
+                    'showgrid': True,
+                },
+                'title': 'Número de Vôos por Ano',
+                'title_x': 0.5,
+            }
+        })
+    ], style={'padding': '20px', 'flex': 1, 'max-width': '50%'}),
+#endregion
+
+#region graficoFeriadosPorAno
+    html.Div([
+        html.H2("Quantidade de Feriados Prolongados Por Ano", 
+                style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
+        dcc.Graph(id='graph-feriados-por-ano', figure={
+            'data': [{
+                'x': feriadosPorAno['ano'],
+                'y': feriadosPorAno['contagem'],
+                'type': 'scatter',
+                'mode': 'lines+markers',
+                'name': 'Feriados por Ano',
+            }],
+            'layout': {
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'xaxis': {
+                    'title': 'Ano',
+                    'showgrid': False,
+                    'tickangle': 0,
+                    'tickmode': 'array',
+                    'tickvals': feriadosPorAno['ano'],
+                    'tickfont': {'size': 10, 'family': 'Arial'},
+                },
+                'yaxis': {
+                    'title': 'Número de Feriados',
+                    'showgrid': True,
+                },
+                'title': 'Número de Feriados Prolongados por Ano',
+                'title_x': 0.5,
+            }
+        })
+        ], style={'padding': '20px', 'flex': 1, 'max-width': '50%'})  # Flexível para dividir espaço
+    ], style={'display': 'flex', 'justify-content': 'space-between'}),
+#endregion
+
+#region graficoVoosPorMes
+    html.Div([
+        html.H2("Quantidade de Vôos Por Mês", 
+                style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
+        dcc.Graph(id='graph-voos-por-mes', figure={
+            'data': [{
+                'x': voosPorMes['mes'],
+                'y': voosPorMes['contagem'],
+                'type': 'bar',
+                'name': 'Mês'
+            }],
+            'layout': {
+                'bargap': 0.5,
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'xaxis': {
+                    'title': 'Mês',
+                    'showgrid': False,
+                    'tickangle': 0,
+                    'tickmode': 'array',
+                    'tickvals': voosPorMes['mes'],
+                    'tickfont': {'size': 10, 'family': 'Arial'},
+                },
+                'title': 'Número de Vôos por Mês',
+                'title_x': 0.5,
+            }
+        })
+    ], style={'padding': '20px'}),
 ])
+#endregion
+
+#endregion
+
+#region cbGraficos
+
+#region cbTop5Normais
+@app.callback(
+    Output('graph-destinos-feriado', 'figure'),
+    Input('ano-dropdown', 'value')
+)
+def update_graph_destinos_normais(selected_year):
+    urlDestinosFeriado = f"http://192.168.15.43:5000/destinosFeriado?ano={selected_year}"
+    responseDestinosFeriado = requests.get(urlDestinosFeriado)
+    dadosDestinosFeriado = responseDestinosFeriado.json()
+    Top5CidadesFeriado = pd.DataFrame(dadosDestinosFeriado)
+    
+    fig = px.bar(Top5CidadesFeriado, x='cidade', y='contagem')
+    return fig
+#endregion
+
+#region cbTop5Feriados
+@app.callback(
+    Output('graph-destinos-normais', 'figure'),
+    Input('ano-dropdown', 'value')
+)
+def update_graph_destinos_feriado(selected_year):
+    urlDestinosNormal = f"http://192.168.15.43:5000/destinosNormais?ano={selected_year}"
+    responseDestinosNormal = requests.get(urlDestinosNormal)
+    dadosDestinosNormal = responseDestinosNormal.json()
+    Top5CidadesNormal = pd.DataFrame(dadosDestinosNormal)
+    
+    fig = px.bar(Top5CidadesNormal, x='cidade', y='contagem')
+    return fig
+#endregion
+
+#region cbVoosPorFeriado
+@app.callback(
+    Output('graph-voos-por-feriado', 'figure'),
+    Input('ano-dropdown', 'value')
+)
+def update_graph_voos_por_feriado(selected_year):
+    urlVoosPorFeriado = f"http://192.168.15.43:5000/voosPorFeriado?ano={selected_year}"
+    responseVoosPorFeriado = requests.get(urlVoosPorFeriado)
+    dadosVoosPorFeriado = responseVoosPorFeriado.json()
+    voosPorFeriado = pd.DataFrame(dadosVoosPorFeriado)
+    
+    fig = px.bar(voosPorFeriado, x='nome feriado', y='contagem')
+    return fig
+#endregion
+
+#region cbVoosPorMes
+@app.callback(
+    Output('graph-voos-por-mes', 'figure'),
+    Input('ano-dropdown', 'value')
+)
+def update_graph_voos_por_mes(selected_year):
+    urlVoosPorMes = f"http://192.168.15.43:5000/voosPorMes?ano={selected_year}"
+    responseVoosPorMes = requests.get(urlVoosPorMes)
+    dadosVoosPorMes = responseVoosPorMes.json()
+    voosPorMes = pd.DataFrame(dadosVoosPorMes)
+    
+    fig = px.bar(voosPorMes, x='mes', y='contagem')
+    return fig
+#endregion
+
+
+
+#endregion
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8051)

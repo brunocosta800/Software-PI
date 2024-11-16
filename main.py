@@ -27,7 +27,6 @@ st.set_page_config(
 )
 
 class MultiApp:
-
     def __init__(self):
         self.apps = []
 
@@ -87,16 +86,38 @@ class MultiApp:
             about.app()
 
     def run_dashboard(self):
-        """ Inicia o servidor Dash em um subprocesso """
+        if 'ano' not in st.session_state:
+            st.session_state.ano = 'Todos'
+        if 'modal' not in st.session_state:
+            st.session_state.modal = 'Todos'
+        if 'destino' not in st.session_state:
+            st.session_state.destino = 'Todos'
+        
         subprocess.Popen(["python", "dashboard.py"])
 
         st.markdown(
             """
-            <h1 style="text-align: center;">Dashboard</h1>
-            <iframe src="http://localhost:8051" width="100%" height="600px"></iframe>
+            <style>
+                body {
+                    background: transparent;
+                }
+                .center {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    background: transparent; /* Remover o fundo do contêiner */
+                }
+            </style>
+            <div class="center">
+                <h1 style="text-align: center;">Dashboard</h1>
+                <iframe src="http://localhost:8051" width="1350px" height="600px"></iframe>
+            </div>
             """, 
             unsafe_allow_html=True
         )
+
 #endregion 
 
 #region configLoginAoIniciar
