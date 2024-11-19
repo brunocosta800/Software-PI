@@ -6,15 +6,19 @@ import home
 import account
 import about
 import pyrebase
+from dotenv import load_dotenv
+import os
+
+load_dotenv("variaveis.env")
 #endregion
 
 #region configDB
 config = {
-    "apiKey": "AIzaSyD4e11Z68I8wpAif9LOZQag0UcACEetBuw",
-    "authDomain": "projectId.firebaseapp.com",
-    "databaseURL": "https://console.firebase.google.com/project/software-pi/overview?hl=pt-br",
-    "storageBucket": "https://console.firebase.google.com/project/software-pi/storage?hl=pt-br",
-    "serviceAccount": "software-pi-ee3c8ccdcd27.json"
+    "apiKey": os.getenv("apiKey"),
+    "authDomain": os.getenv("authDomain"),
+    "databaseURL": os.getenv("databaseURL"),
+    "storageBucket": os.getenv("storageBucket"),
+    "serviceAccount": os.getenv("serviceAccount")
 }
 
 firebase = pyrebase.initialize_app(config)
