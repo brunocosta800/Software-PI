@@ -4,8 +4,10 @@ import requests
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+from flask_cors import CORS
 
 app = dash.Dash(__name__)
+CORS(app.server)
 
 st.session_state.urlDestinosNormal = f"http://192.168.15.43:5000/destinosNormais?ano={'Todos'}&estado={'Todos'}&aero={'Todos'}"
 responseDestinosNormal = requests.get(st.session_state.urlDestinosNormal)
@@ -363,4 +365,4 @@ def update_graph_voos_por_mes(selected_year, selected_state, selected_aero):
 #endregion
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8051)
+    app.run_server(host = '127.0.0.1', debug=True, port=8051)

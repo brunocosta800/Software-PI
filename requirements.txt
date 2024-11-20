@@ -9,3 +9,4 @@ numpy
 pandas
 flask_restful
 python-dotenv
+flask-cors
