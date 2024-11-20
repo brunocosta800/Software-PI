@@ -2,7 +2,7 @@ pyrebase4
 streamlit
 streamlit_option_menu
 firebase_admin
-dash==0.29.0
+dash==1.7.0
 supabase
 requests
 numpy
