@@ -2,7 +2,9 @@ pyrebase4
 streamlit
 streamlit_option_menu
 firebase_admin
-dash
+dash==0.28.2
+dash-html-components==0.13.2
+dash-core-components==0.33.0
 supabase
 requests
 numpy
@@ -10,3 +12,4 @@ pandas
 flask_restful
 python-dotenv
 flask-cors
+
