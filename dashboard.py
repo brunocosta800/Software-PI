@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html, Input, Output, dash_table
 import requests
 import pandas as pd
 import streamlit as st
@@ -8,6 +8,11 @@ from flask_cors import CORS
 
 app = dash.Dash(__name__)
 CORS(app.server)
+
+st.session_state.urlDadosDescritivos = f"http://192.168.15.43:5000/dadosDescritivos"
+responseDescritivos = requests.get(st.session_state.urlDadosDescritivos)
+dadosDescritivos = responseDescritivos.json()
+dfDescritivos = pd.DataFrame(dadosDescritivos)
 
 st.session_state.urlDestinosNormal = f"http://192.168.15.43:5000/destinosNormais?ano={'Todos'}&estado={'Todos'}&aero={'Todos'}"
 responseDestinosNormal = requests.get(st.session_state.urlDestinosNormal)
@@ -38,6 +43,11 @@ st.session_state.urlVoosPorMes = f"http://192.168.15.43:5000/voosPorMes?ano={'To
 responseVoosPorMes = requests.get(st.session_state.urlVoosPorMes)
 dadosVoosPorMes = responseVoosPorMes.json()
 voosPorMes = pd.DataFrame(dadosVoosPorMes)
+
+st.session_state.urlFeriadosPorMes = f"http://192.168.15.43:5000/feriadosProlongadosPorMes?ano={'Todos'}"
+responseFeriadosPorMes = requests.get(st.session_state.urlFeriadosPorMes)
+dadosFeriadosPorMes = responseFeriadosPorMes.json()
+feriadosPorMes = pd.DataFrame(dadosFeriadosPorMes)
 
 ano = ["Todos", "2014","2015","2016","2017","2018", "2019","2020","2021","2022","2023"]
 
@@ -78,6 +88,42 @@ app.layout = html.Div([
             ),
         ], style={'flex': 1, 'padding': '10px'}),
     ], style={'flex': 1, 'padding': '10px', 'text-align': 'center', 'display': 'flex', 'align-items': 'center'}),
+#endregion
+
+#region graficoDadosDescritivos
+    html.Div([
+        html.H2("Dados Descritivos do Estudo", 
+                    style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen', 'display': 'column'}),
+            dash_table.DataTable(
+                id='table-descritivos',
+                columns=[
+                    {'name': 'Ano', 'id': 'Ano'},
+                    {'name': 'Média', 'id': 'mean'},
+                    {'name': 'Mediana', 'id': 'median'},
+                    {'name': 'Variância', 'id': 'var'},
+                    {'name': 'Desvio Padrão', 'id': 'std'}
+                ],
+                data = dfDescritivos.to_dict('records'),
+                style_table={'overflowX': 'auto'},
+                style_cell={
+                    'textAlign': 'center',
+                    'fontFamily': 'Arial',
+                    'fontSize': '14px'
+                },
+                style_header={
+                    'backgroundColor': 'darkgreen',
+                    'color': 'white',
+                    'fontWeight': 'bold',
+                    'textAlign': 'center'
+                },
+                style_data_conditional=[
+                    {
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': 'rgba(0, 128, 0, 0.1)'
+                    }
+                ]
+            )
+        ], style={'padding': '20px', 'flex': 1, 'max-width': '90%', 'margin-left': '50px'}), 
 #endregion
 
 #region graficoTop5Normais
@@ -269,6 +315,36 @@ app.layout = html.Div([
             }
         })
     ], style={'padding': '20px'}),
+    
+#endregion
+
+#region graficoDpPorAno
+    html.Div([
+        html.H2("Feriados Prolongados Por Mês", 
+                style={'textAlign': 'center', 'fontFamily': 'Arial', 'fontSize': '28px', 'color': 'darkgreen'}),
+        dcc.Graph(id='graph-feriados-por-mes', figure={
+            'data': [{
+                'x': feriadosPorMes['mes'],
+                'y': feriadosPorMes['contagem'],
+                'type': 'scatter',
+                'mode': 'lines+markers',
+                'name': 'Mês'
+            }],
+            'layout': {
+                'bargap': 0.5,
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'xaxis': {
+                    'title': 'Mês',
+                    'showgrid': False,
+                    'tickangle': 0,
+                    'tickmode': 'array',
+                    'tickvals': feriadosPorMes['mes'],
+                    'tickfont': {'size': 10, 'family': 'Arial'},
+                },
+            }
+        })
+    ], style={'padding': '20px'})
 ])
 #endregion
 
@@ -361,6 +437,20 @@ def update_graph_voos_por_mes(selected_year, selected_state, selected_aero):
     return fig
 #endregion
 
+#region cbFeriadosPorMes
+@app.callback(
+    Output('graph-feriados-por-mes', 'figure'),
+    Input('ano-dropdown', 'value')
+)
+def update_graph_voos_por_mes(selected_year):
+    st.session_state.urlFeriadosPorMes = f"http://192.168.15.43:5000/feriadosProlongadosPorMes?ano={selected_year}"
+    responseFeriadosPorMes = requests.get(st.session_state.urlFeriadosPorMes)
+    dadosFeriadosPorMes = responseFeriadosPorMes.json()
+    feriadosPorMes = pd.DataFrame(dadosFeriadosPorMes)
+    
+    fig = px.bar(feriadosPorMes, x='mes', y='contagem', color_discrete_sequence=['#2484BF'])
+    return fig
+#endregion
 
 #endregion
 

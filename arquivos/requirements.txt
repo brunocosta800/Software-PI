@@ -1,0 +1,13 @@
+pyrebase4
+streamlit
+streamlit_option_menu
+firebase_admin
+dash
+supabase
+requests
+numpy
+pandas
+flask_restful
+python-dotenv
+flask-cors
+

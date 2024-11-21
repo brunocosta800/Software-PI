@@ -15,11 +15,10 @@ import os
 
 load_dotenv("variaveis.env")
 
-with open("feriados_acumulados.json", "r") as file:
+with open("arquivos\feriados_acumulados.json", "r") as file:
     feriados = json.load(file)
 
 dfFeriados = pd.DataFrame(feriados)
-
 
 dfFeriados['date'] = pd.to_datetime(dfFeriados['date'])
 
@@ -413,6 +412,22 @@ def get_voosPorMes():
     voosPorMes['mes'] = voosPorMes['mes'].apply(lambda x: calendar.month_name[x])
     
     return Response(voosPorMes.to_json(orient="records"), mimetype='application/json')
+
+@app.route("/feriadosProlongadosPorMes", methods=['GET'])
+def get_feriadosProlongadosPorMes():
+    ano = request.args.get('ano')
+    
+    if ano == 'Todos':
+        quantidadeFeriadosProlongadosPorMes = (dfFeriados['feriadoProlongado'] == True).groupby(dfFeriados['mes']).sum()
+    else:
+        filtered_df = dfFeriados[dfFeriados['feriadoProlongado'] == True]
+        filtered_df2 = filtered_df[filtered_df['ano'] == int(ano)]
+        quantidadeFeriadosProlongadosPorMes = filtered_df2.groupby(filtered_df2['mes']).size()
+        
+    feriadosProlongadosPorMes = pd.DataFrame(quantidadeFeriadosProlongadosPorMes).reset_index()
+    feriadosProlongadosPorMes.columns = ['mes', 'contagem']
+    
+    return Response(feriadosProlongadosPorMes.to_json(orient="records"), mimetype='application/json')
 
 if __name__ == "__main__":
     app.run(host=os.getenv('IP', '0.0.0.0'), port=int(os.getenv('PORT', 5000)))

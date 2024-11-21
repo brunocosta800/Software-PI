@@ -116,7 +116,7 @@ class MultiApp:
             </style>
             <div class="center">
                 <h1 style="text-align: center;">Dashboard</h1>
-                <iframe src="http://127.0.0.1:8051" width="1350px" height="600px"></iframe>
+                <iframe src="http://127.0.0.1:8051" width="1350px" height="700px"></iframe>
             </div>
             """, 
             unsafe_allow_html=True
